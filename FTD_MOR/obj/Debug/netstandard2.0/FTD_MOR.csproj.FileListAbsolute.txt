@@ -1,0 +1,14 @@
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOR\bin\Debug\netstandard2.0\FTD_MOR.deps.json
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOR\bin\Debug\netstandard2.0\FTD_MOR.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOR\bin\Debug\netstandard2.0\FTD_MOR.pdb
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOR\bin\Debug\netstandard2.0\IDOBase.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOR\bin\Debug\netstandard2.0\IDOCore.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOR\bin\Debug\netstandard2.0\IDOProtocol.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOR\bin\Debug\netstandard2.0\MGShared.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOR\bin\Debug\netstandard2.0\Newtonsoft.Json.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOR\bin\Debug\netstandard2.0\WSEnums.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOR\obj\Debug\netstandard2.0\FTD_MOR.AssemblyInfoInputs.cache
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOR\obj\Debug\netstandard2.0\FTD_MOR.AssemblyInfo.cs
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOR\obj\Debug\netstandard2.0\FTD_MOR.csproj.CopyComplete
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOR\obj\Debug\netstandard2.0\FTD_MOR.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOR\obj\Debug\netstandard2.0\FTD_MOR.pdb

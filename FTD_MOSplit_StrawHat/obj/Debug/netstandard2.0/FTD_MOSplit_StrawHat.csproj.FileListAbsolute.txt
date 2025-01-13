@@ -1,0 +1,16 @@
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_StrawHat\bin\Debug\netstandard2.0\FTD_MOSplit_StrawHat.deps.json
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_StrawHat\bin\Debug\netstandard2.0\FTD_MOSplit_StrawHat.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_StrawHat\bin\Debug\netstandard2.0\FTD_MOSplit_StrawHat.pdb
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_StrawHat\bin\Debug\netstandard2.0\IDOBase.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_StrawHat\bin\Debug\netstandard2.0\IDOCore.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_StrawHat\bin\Debug\netstandard2.0\IDOProtocol.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_StrawHat\bin\Debug\netstandard2.0\MGShared.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_StrawHat\bin\Debug\netstandard2.0\Newtonsoft.Json.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_StrawHat\bin\Debug\netstandard2.0\WindowsBase.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_StrawHat\bin\Debug\netstandard2.0\WSEnums.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_StrawHat\obj\Debug\netstandard2.0\FTD_MOSplit_StrawHat.csprojAssemblyReference.cache
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_StrawHat\obj\Debug\netstandard2.0\FTD_MOSplit_StrawHat.AssemblyInfoInputs.cache
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_StrawHat\obj\Debug\netstandard2.0\FTD_MOSplit_StrawHat.AssemblyInfo.cs
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_StrawHat\obj\Debug\netstandard2.0\FTD_MOSplit_StrawHat.csproj.CopyComplete
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_StrawHat\obj\Debug\netstandard2.0\FTD_MOSplit_StrawHat.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_StrawHat\obj\Debug\netstandard2.0\FTD_MOSplit_StrawHat.pdb

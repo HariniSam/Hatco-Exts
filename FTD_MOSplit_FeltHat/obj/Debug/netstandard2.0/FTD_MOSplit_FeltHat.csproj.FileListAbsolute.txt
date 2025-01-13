@@ -1,0 +1,16 @@
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_FeltHat\bin\Debug\netstandard2.0\FTD_MOSplit_FeltHat.deps.json
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_FeltHat\bin\Debug\netstandard2.0\FTD_MOSplit_FeltHat.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_FeltHat\bin\Debug\netstandard2.0\IDOBase.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_FeltHat\bin\Debug\netstandard2.0\IDOCore.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_FeltHat\bin\Debug\netstandard2.0\IDOProtocol.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_FeltHat\bin\Debug\netstandard2.0\MGShared.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_FeltHat\bin\Debug\netstandard2.0\Newtonsoft.Json.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_FeltHat\bin\Debug\netstandard2.0\WindowsBase.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_FeltHat\bin\Debug\netstandard2.0\WSEnums.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_FeltHat\obj\Debug\netstandard2.0\FTD_MOSplit_FeltHat.AssemblyInfoInputs.cache
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_FeltHat\obj\Debug\netstandard2.0\FTD_MOSplit_FeltHat.AssemblyInfo.cs
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_FeltHat\obj\Debug\netstandard2.0\FTD_MOSplit_FeltHat.csproj.CopyComplete
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_FeltHat\bin\Debug\netstandard2.0\FTD_MOSplit_FeltHat.pdb
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_FeltHat\obj\Debug\netstandard2.0\FTD_MOSplit_FeltHat.dll
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_FeltHat\obj\Debug\netstandard2.0\FTD_MOSplit_FeltHat.pdb
+D:\Projects\Hatco\Mongoose\Ext Classes\ExtClasses\FTD_MOSplit_FeltHat\obj\Debug\netstandard2.0\FTD_MOSplit_FeltHat.csprojAssemblyReference.cache

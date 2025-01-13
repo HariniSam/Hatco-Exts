@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="IDOBase">
+      <HintPath>..\..\..\..\..\M3 Data Upload\Solution\FTD_BulkUpload\FTD_BulkUpload\bin\Debug\netstandard2.0\IDOBase.dll</HintPath>
+    </Reference>
+    <Reference Include="IDOCore">
+      <HintPath>..\..\..\..\..\Factory Trak\ROYCE TOO\InboundPalletize\FTD_BGTasks\FTD_BGTasks\bin\Debug\netstandard2.0\IDOCore.dll</HintPath>
+    </Reference>
+    <Reference Include="IDOProtocol">
+      <HintPath>..\..\..\..\..\Factory Trak\ROYCE TOO\InboundPalletize\PackageConnect\bin\Debug\IDOProtocol.dll</HintPath>
+    </Reference>
+    <Reference Include="MGShared">
+      <HintPath>..\..\..\..\..\M3 Data Upload\Solution\FTD_M3DataUpload_4.7.2\FTD_M3DataUpload\FTD_M3DataUpload\bin\Debug\net472\MGShared.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\..\..\..\Factory Trak\ROYCE TOO\InboundPalletize\PackageConnect\bin\Debug\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Buffers">
+      <HintPath>..\..\..\..\..\Steve Madden\Mongoose\Allocation&amp;DeliverySplitting\ObjectsDB\IDOExt\FTD_OA\FTD_OA\FTD_OA\bin\Debug\net472\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Memory">
+      <HintPath>..\..\..\..\..\Steve Madden\Mongoose\Allocation&amp;DeliverySplitting\ObjectsDB\IDOExt\FTD_OA\FTD_OA\FTD_OA\bin\Debug\net472\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="WindowsBase">
+      <HintPath>..\..\..\..\..\M3 Data Upload\Solution\FTD_M3DataUpload_4.7.2\FTD_M3DataUpload\FTD_M3DataUpload\bin\Debug\net472\WindowsBase.dll</HintPath>
+    </Reference>
+    <Reference Include="WSEnums">
+      <HintPath>..\..\..\..\..\Rocky\DEM\Mongoose - IDO Assembly Classes\ARD\bin\Debug\WSEnums.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
