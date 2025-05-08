@@ -38,11 +38,13 @@ namespace FTD_MOSplit_StrawHat
             returnMessage = "";
             string email = GetWorkstationID(ref returnMessage);//GetUserData(user, ref sMessage);
             cono = company; divi = division;
+            int scheduleQty = 0;
 
             try
             {
                 //Extract Data
                 List<OperationsInfo> operationsLst = LstMWOOPE04(scheduleNo, workCenter, workCenter, facility, "", true);
+                scheduleQty = operationsLst.Sum(x => x.Qty);
 
                 if (string.IsNullOrEmpty(sMessage))
                 {
@@ -51,13 +53,13 @@ namespace FTD_MOSplit_StrawHat
                 else
                     throw new Exception(sMessage);
 
-                ProcessAppEvent(returnMessage, "", email, scheduleNo);
+                ProcessAppEvent(returnMessage, "", email, scheduleNo, styleNumber, scheduleQty);
                 returnMessage = "New Schedules created: " + (string.IsNullOrEmpty(returnMessage) ? "None" : returnMessage);
             }
 
             catch (Exception ex)
             {
-                ProcessAppEvent(returnMessage, ex.Message, email, scheduleNo);
+                ProcessAppEvent(returnMessage, ex.Message, email, scheduleNo, styleNumber, scheduleQty);
                 returnMessage = "New Schedules created: " + (string.IsNullOrEmpty(returnMessage) ? "None" : returnMessage) +
                      "<br>Errors: " + ex.Message;
             }
@@ -71,6 +73,7 @@ namespace FTD_MOSplit_StrawHat
             string sMessage = "", scheduleNo = "", styleNumber = "", operation = ""; int currentOperation = 0, completeStatus = 40; returnMessage = "";
             string email = GetWorkstationID(ref returnMessage);//GetUserData(user, ref sMessage);
             cono = company; divi = division;
+            int scheduleQty = 0;
             try
             {
                 parmData = parmData.Replace("@#!", ",");
@@ -107,8 +110,11 @@ namespace FTD_MOSplit_StrawHat
                                 operation = origOperationsLst.First().OPNumber;
                                 var operationsLst = origOperationsLst.Where(x => x.OPNumber.Equals(operation) && x.ScheduleNo.Equals(scheduleNo)
                                                                                     && moLst.Contains(x.MONumber));
+
+                                scheduleQty = operationsLst.Sum(x => x.Qty);
+
                                 performSplitting(operationsLst.ToList(), scheduleNo, styleNumber, company, division, facility, workCenter, ref returnMessage);
-                            }
+                           }
 
                         }
 
@@ -118,13 +124,13 @@ namespace FTD_MOSplit_StrawHat
                         throw new Exception(sMessage);
                 }
 
-                ProcessAppEvent(returnMessage, "", email, scheduleNo);
+                ProcessAppEvent(returnMessage, "", email, scheduleNo, styleNumber, scheduleQty);
                 returnMessage = "New Schedules created: " + (string.IsNullOrEmpty(returnMessage) ? "None" : returnMessage);
 
             }
             catch (Exception ex)
             {
-                ProcessAppEvent(returnMessage, ex.Message, email, scheduleNo);
+                ProcessAppEvent(returnMessage, ex.Message, email, scheduleNo, styleNumber, scheduleQty);
                 returnMessage = "New Schedules created: " + (string.IsNullOrEmpty(returnMessage) ? "None" : returnMessage) +
                      "<br>Errors: " + ex.Message;
             }
@@ -813,12 +819,12 @@ namespace FTD_MOSplit_StrawHat
             return result;
         }
 
-        public void ProcessAppEvent(string returnMessage, string errorMessage, string user, string scheduleNo)
+        public void ProcessAppEvent(string returnMessage, string errorMessage, string user, string scheduleNo, string styleNo, int scheduleQty)
         {
             returnMessage = string.IsNullOrEmpty(returnMessage) ? "None" : returnMessage;
             string process = "Straw Hat";
 
-            ApplicationEventParameter[] ParmList = new ApplicationEventParameter[5];
+            ApplicationEventParameter[] ParmList = new ApplicationEventParameter[7];
             string result;
             ParmList[0] = new ApplicationEventParameter();
             ParmList[0].Name = "varProcess";
@@ -835,6 +841,12 @@ namespace FTD_MOSplit_StrawHat
             ParmList[4] = new ApplicationEventParameter();
             ParmList[4].Name = "varOrigSchNo";
             ParmList[4].Value = scheduleNo;
+            ParmList[5] = new ApplicationEventParameter();
+            ParmList[5].Name = "varStyleNo";
+            ParmList[5].Value = styleNo;
+            ParmList[6] = new ApplicationEventParameter();
+            ParmList[6].Name = "varSchQty";
+            ParmList[6].Value = scheduleQty.ToString();
 
             FireApplicationEvent("FTD_MOPSplit", true, true, out result, ref ParmList);
         }

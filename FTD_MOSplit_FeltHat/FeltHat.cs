@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -21,6 +22,14 @@ namespace FTD_MOSplit_FeltHat
         DataTable newMOPs;
         DataTable fullResults;
         private bool updateTasks = true;
+        private string company = "";
+        private string division = "";
+        string serverURL = "", tenantID = "", bearerToken = "";
+
+        int batchSize = 50;
+
+        int maxrecs = 10000;
+
 
         public override void SetContext(IIDOExtensionClassContext context)
         {
@@ -113,8 +122,9 @@ namespace FTD_MOSplit_FeltHat
             }
             catch (Exception ex)
             {
-                returnMessage = "Process completed with error, please check audit log for further references";
-                CreateLog(JobID, ex.Message, "Exception", "", "", "FeltHat");
+                returnMessage = "New Schedules created: " + (string.IsNullOrEmpty(returnMessage) ? "None" : returnMessage) +
+                     "<br>Errors: " + ex.Message;
+                CreateLog(JobID, "StartProcess", "Exception", ex.Message, "", "FeltHat");
                 ProcessAppEvent(returnMessage, ex.Message, email, string.Join(";", origSchNos));
             }
         }
@@ -156,7 +166,7 @@ namespace FTD_MOSplit_FeltHat
                      "<br>Errors: " + errormessage;
                 //CreateLog(JobID, "New Schedules created", returnMessage.Replace("New Schedules created: ", ""), "", "", "FeltHat");
 
-                CreateLog(JobID, "Exception - RunProcessForEachLine", ex.StackTrace, "", "", "FeltHat");
+                CreateLog(JobID, "RunProcessForEachLine", "Exception", ex.Message + ":" + ex.StackTrace, "", "FeltHat");
 
             }
             catch (Exception ex)
@@ -166,7 +176,8 @@ namespace FTD_MOSplit_FeltHat
                 returnMessage = "New Schedules created: " + (string.IsNullOrEmpty(returnMessage) ? "None" : returnMessage) +
                      "<br>Errors: " + ex.Message;
                 CreateLog(JobID, "New Schedules created", returnMessage.Replace("New Schedules created: ", ""), "", "", "FeltHat");
-                CreateLog(JobID, "Exception - RunProcessForEachLine", ex.StackTrace, "", "", "FeltHat");
+                CreateLog(JobID, "RunProcessForEachLine", "Exception", ex.Message + ":" + ex.StackTrace, "", "FeltHat");
+
             }
         }
 
@@ -181,6 +192,8 @@ namespace FTD_MOSplit_FeltHat
                 string Infobar = "";
                 bool MOSplit = true;
                 int maxQty = 0;
+                this.company = company;
+                this.division = division;
 
                 List<Tuple<string, string>> lstparms = new List<Tuple<string, string>>();
                 lstparms.Add(new Tuple<string, string>("method", "/m3api-rest/v2/execute/CMS100MI/LstMMOPLP02"));
@@ -191,6 +204,9 @@ namespace FTD_MOSplit_FeltHat
                 lstparms.Add(new Tuple<string, string>("T_SCHN", scheduleNo));
                 lstparms.Add(new Tuple<string, string>("F_RESP", responsible));
                 lstparms.Add(new Tuple<string, string>("T_RESP", responsible));
+                lstparms.Add(new Tuple<string, string>("cono", company));
+                lstparms.Add(new Tuple<string, string>("divi", division));
+                lstparms.Add(new Tuple<string, string>("maxrecs", maxrecs.ToString()));
 
                 string sMethodList = BuildMethodParms(lstparms);
                 string result = ProcessIONAPI(JobID, sMethodList, out Infobar);
@@ -329,38 +345,53 @@ namespace FTD_MOSplit_FeltHat
                         TotalQty = fullResults.AsEnumerable().Sum(row => row.Field<int>("ROORQA"));
                         //CreateLog(JobID, "TotalQty", TotalQty.ToString(), "", "", "FeltHat");
                         CreateLog(JobID, "Filled model data", "", "", "", "FeltHat");
+                        bool canGroup = true;
 
-                        List<Model>
+                        canGroup = !oDataList
+                                    .Any(data => oDataList
+                                    .Where(nextData => nextData != data && data.ROPRNO == nextData.ROPRNO)
+                                    .Any(nextData => nextData.ROORQA % maxQty == 0));
+
+                        List<Model> testList1;
+
+                        if (canGroup)
+                        {
                             testList1 = oDataList.OrderBy(a => a.ROPRNO).GroupBy(row => new { row.ROPRNO })
-.Select(item => new Model()
-{
-ROPLPN = RemoveDuplicates(String.Join(",", item.Select(a => a.ROPLPN))),
-ROPLPS = item.Select(a => a.ROPLPS).FirstOrDefault(),
-ROHDPR = item.Select(a => a.ROHDPR).FirstOrDefault(),
-ROPRNO = item.Select(a => a.ROPRNO).FirstOrDefault(),
-ROORQA = item.Sum(a => a.ROORQA),
-ROOPTX = item.Select(a => a.ROOPTX).FirstOrDefault(),
-ROOPTY = item.Select(a => a.ROOPTY).FirstOrDefault(),
-ROOPTZ = item.Select(a => a.ROOPTZ).FirstOrDefault(),
-ROPLDT = item.Select(a => a.ROPLDT).FirstOrDefault(),
-ROFACI = item.Select(a => a.ROFACI).FirstOrDefault(),
-RORESP = item.Select(a => a.RORESP).FirstOrDefault(),
-ROSTDT = item.Select(a => a.ROSTDT).FirstOrDefault(),
-ROFIDT = item.Select(a => a.ROFIDT).FirstOrDefault(),
-RORORC = item.Select(a => a.RORORC).FirstOrDefault(),
-RORORN = item.Select(a => a.RORORN).FirstOrDefault(),
-RORORL = item.Select(a => a.RORORL).FirstOrDefault(),
-ROWHLO = item.Select(a => a.ROWHLO).FirstOrDefault(),
-ROPSTS = item.Select(a => a.ROPSTS).FirstOrDefault(),
-RORORX = item.Select(a => a.RORORX).FirstOrDefault(),
-ROORQT = item.Sum(a => a.ROORQT),
-ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
+                .Select(item => new Model()
+                {
+                    ROPLPN = RemoveDuplicates(String.Join(",", item.Select(a => a.ROPLPN))),
+                    ROPLPS = item.Select(a => a.ROPLPS).FirstOrDefault(),
+                    ROHDPR = item.Select(a => a.ROHDPR).FirstOrDefault(),
+                    ROPRNO = item.Select(a => a.ROPRNO).FirstOrDefault(),
+                    ROORQA = item.Sum(a => a.ROORQA),
+                    ROOPTX = item.Select(a => a.ROOPTX).FirstOrDefault(),
+                    ROOPTY = item.Select(a => a.ROOPTY).FirstOrDefault(),
+                    ROOPTZ = item.Select(a => a.ROOPTZ).FirstOrDefault(),
+                    ROPLDT = item.Select(a => a.ROPLDT).FirstOrDefault(),
+                    ROFACI = item.Select(a => a.ROFACI).FirstOrDefault(),
+                    RORESP = item.Select(a => a.RORESP).FirstOrDefault(),
+                    ROSTDT = item.Select(a => a.ROSTDT).FirstOrDefault(),
+                    ROFIDT = item.Select(a => a.ROFIDT).FirstOrDefault(),
+                    RORORC = item.Select(a => a.RORORC).FirstOrDefault(),
+                    RORORN = item.Select(a => a.RORORN).FirstOrDefault(),
+                    RORORL = item.Select(a => a.RORORL).FirstOrDefault(),
+                    ROWHLO = item.Select(a => a.ROWHLO).FirstOrDefault(),
+                    ROPSTS = item.Select(a => a.ROPSTS).FirstOrDefault(),
+                    RORORX = item.Select(a => a.RORORX).FirstOrDefault(),
+                    ROORQT = item.Sum(a => a.ROORQT),
+                    ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
 
-}).ToList();
+                }).ToList();
+                        }
+                        else
+                        {
+                            testList1 = oDataList.OrderBy(a => a.ROPRNO).ToList();
+                        }
+
 
 
                         //CreateLog(JobID, "aggregated model data", "", "", "", "FeltHat");
-                        CreateLog(JobID, "testList1", testList1.Count().ToString(), "", "", "FeltHat");
+                        CreateLog(JobID, "testList1", testList1.Count().ToString(), canGroup.ToString(), "", "FeltHat");
 
                         fullResults = ToDataTable(testList1);
 
@@ -411,12 +442,10 @@ ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
                         newMOPs.Columns.Add("SCHN");
                         newMOPs.Columns.Add("SIMD");
                         newMOPs.Columns.Add("PSTS");
+                        newMOPs.Columns.Add("CURR");//HariniS
 
                         if (MOSplit)
                         {
-                            
-                            
-
                             int i = 0;
 
                             if (maxQty != 0)
@@ -464,7 +493,7 @@ ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
 
                                 ResponseRoot oResponseRoot = null;
 
-                                string results = CallServicePost(jsonString, JobID);
+                                string results = CallServicePost(jsonString, JobID, 0);
                                 if (results != string.Empty)
                                 {
                                     oResponseRoot = JsonConvert.DeserializeObject<ResponseRoot>(results);
@@ -484,9 +513,8 @@ ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
                                         string ScheduleNumber = oResponseResult.records[0].SCHN;
                                         //string ScheduleNumber = AddScheduleNo(StyleNumber);
                                         returnMessage = returnMessage + ", " + ScheduleNumber;
-                                        fill(JobID, maxQty, ScheduleNumber, Facility, company);
+                                        fill(JobID, maxQty, ScheduleNumber, Facility, company, canGroup);
                                         listIndex++;
-
                                     }
                                     //CreateLog(JobID, "TotalQty:" + TotalQty.ToString(), "i:" + i.ToString(), "", "", "FeltHat");
                                     int diff = TotalQty - i;
@@ -500,18 +528,14 @@ ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
                                         string ScheduleNumber = oResponseResult.records[0].SCHN;
                                         //string ScheduleNumber = AddScheduleNo(StyleNumber);
                                         returnMessage = returnMessage + ", " + ScheduleNumber;
-                                        fill(JobID, diff, ScheduleNumber, Facility, company);
+                                        fill(JobID, diff, ScheduleNumber, Facility, company, canGroup);
                                     }
+
+                                    CreateLog(JobID, "FillCount", newMOPs.Rows.Count.ToString(), "", "", "FeltHat");
+                                        
 
                                     if (newMOPs.Rows.Count > 0)
                                     {
-                                        CrtMOPRoot oCrtMOPRoot = new CrtMOPRoot();
-                                        oCrtMOPRoot.program = "PMS170MI";
-                                        oCrtMOPRoot.cono = int.Parse(company);
-                                        oCrtMOPRoot.divi = division;
-                                        oCrtMOPRoot.excludeEmptyValues = false;
-                                        oCrtMOPRoot.rightTrim = true;
-                                        oCrtMOPRoot.maxReturnedRecords = 0;
 
                                         List<CrtMOPTransaction> oListCrtMOPTransaction = new List<CrtMOPTransaction>();
 
@@ -528,20 +552,24 @@ ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
                                             //UpdateScheduleNo();
                                         }
 
-                                        oCrtMOPRoot.transactions = oListCrtMOPTransaction;
+                                        
+                                        processCrtPlannedMO(JobID, oListCrtMOPTransaction);
 
-                                        string crtMOPjsonString = JsonConvert.SerializeObject(oCrtMOPRoot);
+                                        // CreateLog(JobID, "TransCount", oListCrtMOPTransaction.Count().ToString(), "", "", "FeltHat");
+                                        // oCrtMOPRoot.transactions = oListCrtMOPTransaction;
 
-                                        string crtMOPresults = CallServicePost(crtMOPjsonString, JobID);
-                                        if (crtMOPresults != string.Empty)
-                                        {
-                                            //oResponseRoot = JsonConvert.DeserializeObject<ResponseRoot>(crtMOPresults);
-                                        }
+                                        // string crtMOPjsonString = JsonConvert.SerializeObject(oCrtMOPRoot);
 
-                                        if (oResponseRoot != null)
-                                        {
+                                        // string crtMOPresults = CallServicePost(crtMOPjsonString, JobID,0);
+                                        // if (crtMOPresults != string.Empty)
+                                        // {
+                                        //     //oResponseRoot = JsonConvert.DeserializeObject<ResponseRoot>(crtMOPresults);
+                                        // }
 
-                                        }
+                                        // if (oResponseRoot != null)
+                                        // {
+
+                                        // }
                                         //foreach (DataRow dr in newMOPs.Rows)
                                         //{
                                         //    string sPLPN = CreatePlannedMO(dr);
@@ -590,18 +618,20 @@ ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
                                 //string sPLPN = CreatePlannedMO(dr);
                                 //UpdateScheduleNo();
                             }
-                            CrtMOPRoot oCrtMOPRoot = new CrtMOPRoot();
-                            oCrtMOPRoot.program = "PMS170MI";
-                            oCrtMOPRoot.cono = int.Parse(company);
-                            oCrtMOPRoot.divi = division;
-                            oCrtMOPRoot.excludeEmptyValues = false;
-                            oCrtMOPRoot.rightTrim = true;
-                            oCrtMOPRoot.maxReturnedRecords = 0;
-                            oCrtMOPRoot.transactions = oListCrtMOPTransaction;
 
-                            string crtMOPjsonString = JsonConvert.SerializeObject(oCrtMOPRoot);
+                            processCrtPlannedMO(JobID, oListCrtMOPTransaction);
+                            // CrtMOPRoot oCrtMOPRoot = new CrtMOPRoot();
+                            // oCrtMOPRoot.program = "PMS170MI";
+                            // oCrtMOPRoot.cono = int.Parse(company);
+                            // oCrtMOPRoot.divi = division;
+                            // oCrtMOPRoot.excludeEmptyValues = false;
+                            // oCrtMOPRoot.rightTrim = true;
+                            // oCrtMOPRoot.maxReturnedRecords = 0;
+                            // oCrtMOPRoot.transactions = oListCrtMOPTransaction;
 
-                            string crtMOPresults = CallServicePost(crtMOPjsonString, JobID);
+                            // string crtMOPjsonString = JsonConvert.SerializeObject(oCrtMOPRoot);
+
+                            // string crtMOPresults = CallServicePost(crtMOPjsonString, JobID,0);
 
                             RemoveOrigSchFromMOs(company, division, JobID);
                             DelPlannedMOs(company, division, JobID);
@@ -615,9 +645,20 @@ ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
                         }
 
                     }
+                    else
+                    {
+                        throw new Exception("No records found");
+                    }
 
 
                 }
+                else
+                {
+                    throw new Exception(Infobar);
+                }
+
+
+
             }
             catch (AggregateException ex)
             {
@@ -627,8 +668,7 @@ ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
                 //returnMessage = "New Schedules created: " + (string.IsNullOrEmpty(returnMessage) ? "None" : returnMessage) +
                 //     "<br>Errors: " + errormessage;
                 CreateLog(JobID, "New Schedules created", returnMessage.Replace("New Schedules created: ", ""), "", "", "FeltHat");
-
-                CreateLog(JobID, "Exception - LstMMOPLP02", ex.Message, "", "", "FeltHat");
+                CreateLog(JobID, "LstMMOPLP02", "Exception", ex.Message + ":" + ex.StackTrace, "", "FeltHat");
 
             }
             catch (Exception ex)
@@ -637,8 +677,9 @@ ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
                 ////ProcessAppEvent(returnMessage, ex.Message, email);
                 //returnMessage = "New Schedules created: " + (string.IsNullOrEmpty(returnMessage) ? "None" : returnMessage) +
                 //     "<br>Errors: " + ex.Message;
-                CreateLog(JobID, "Exception - LstMMOPLP02", ex.Message, "", "", "FeltHat");
                 CreateLog(JobID, "New Schedules created", returnMessage.Replace("New Schedules created: ", ""), "", "", "FeltHat");
+                CreateLog(JobID, "LstMMOPLP02", "Exception", ex.Message + ":" + ex.StackTrace, "", "FeltHat");
+
             }
 
         }
@@ -676,7 +717,7 @@ ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
             return oResultDataTable;
         }
 
-        public void fill(string JobID, int qty, string ScheduleNumber, string facility, string company)
+        public void fill(string JobID, int qty, string ScheduleNumber, string facility, string company, bool canGroup)
         {
             CreateLog(JobID, "New Schedules created", ScheduleNumber, "", "", "FeltHat");
 
@@ -706,9 +747,18 @@ ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
                         string sRORX = filterResults.Rows[i]["RORORX"].ToString();
                         string sORTY = filterResults.Rows[i]["ROORQT"].ToString();
 
-                        DataRow[] dr;
+                        DataRow[] dr = null;
 
-                        dr = newMOPs.Select(string.Format("PRNO ='{0}' AND SCHN = '{1}'", sPRNO, ScheduleNumber));
+                        if (canGroup)
+                        {
+                            dr = newMOPs.Select(string.Format("PRNO ='{0}' AND SCHN = '{1}'", sPRNO, ScheduleNumber));
+
+                        }
+                        else
+                        {
+                            dr = newMOPs.Select(string.Format("PRNO ='{0}' AND SCHN = '{1}' AND CURR = '{2}'", sPRNO, ScheduleNumber, i.ToString()));
+                        }
+
                         if (dr.Count() > 0)
                         {
                             if (dr[0]["PPQT"] != null)
@@ -741,6 +791,7 @@ ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
                             newRow["SCHN"] = ScheduleNumber;
                             newRow["SIMD"] = "0";
                             newRow["PSTS"] = sPSTS;
+                            newRow["CURR"] = i.ToString();
 
                             newMOPs.Rows.Add(newRow);
 
@@ -778,6 +829,8 @@ ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
             lstparms.Add(new Tuple<string, string>("method", "/m3api-rest/v2/execute/PMS270MI/AddScheduleNo"));
             lstparms.Add(new Tuple<string, string>("SCHN", ""));
             lstparms.Add(new Tuple<string, string>("TX40", StyleNumber));
+            lstparms.Add(new Tuple<string, string>("cono", this.company));
+            lstparms.Add(new Tuple<string, string>("divi", this.division));
 
             string sMethodList = BuildMethodParms(lstparms);
             string result = ProcessIONAPI(JobID, sMethodList, out Infobar);
@@ -856,10 +909,51 @@ ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
         //    return "";
         //}
 
+        private void processCrtPlannedMO(string JobID, List<CrtMOPTransaction> oCrtMOPTransaction)
+        {
+            CreateLog(JobID, "TransCount", oCrtMOPTransaction.Count().ToString(), "", "", "FeltHat");
+                                        
+            int totalBatches = (int)Math.Ceiling((double)oCrtMOPTransaction.Count / this.batchSize);
+
+            for (int batchIndex = 0; batchIndex < totalBatches; batchIndex++)
+            {
+                // Get the current batch of transactions
+                var currentBatch = oCrtMOPTransaction.Skip(batchIndex * this.batchSize).Take(this.batchSize).ToList();
+
+                // Create a new instance of UpdateM3CORoot and populate it with the current batch
+                CrtMOPRoot oCrtMOPRoot = new CrtMOPRoot
+                {
+                    program = "PMS170MI",
+                    cono = int.Parse(company),
+                    divi = division,
+                    excludeEmptyValues = false,
+                    rightTrim = true,
+                    maxReturnedRecords = 0,
+                    transactions = currentBatch
+                };
+
+                CreateLog(JobID, "Batch:" + batchIndex.ToString() + "-" + currentBatch.Count.ToString(), "","" , "", "CrtPlannedMO");
+
+                // Serialize the current batch to JSON
+                string jsonString = JsonConvert.SerializeObject(oCrtMOPRoot);
+
+                CreateLog(JobID, "Request:" + jsonString, "","" , "", "CrtPlannedMO");
+
+                // Call the service with the current batch
+                string results = CallServicePost(jsonString, JobID, 0);
+
+                CreateLog(JobID, "", "Response:" + results, "" , "", "CrtPlannedMO");
+
+
+            }
+
+        }
+
+
         public CrtMOPRecord CreatePlannedMO(string company, DataRow dr, bool hasSplit, string scheduleNo)
         {
             CrtMOPRecord oCrtMOPRecord = new CrtMOPRecord();
-            oCrtMOPRecord.CONO = hasSplit ? int.Parse(dr["CONO"].ToString()) : int.Parse(company);
+            oCrtMOPRecord.CONO = hasSplit && int.TryParse(dr["CONO"].ToString(), out int cono) ? cono : int.Parse(company);
             oCrtMOPRecord.FACI = hasSplit ? dr["FACI"].ToString() : dr["ROFACI"].ToString();
             oCrtMOPRecord.WHLO = hasSplit ? dr["WHLO"].ToString() : dr["ROWHLO"].ToString();
             oCrtMOPRecord.PRNO = hasSplit ? dr["PRNO"].ToString() : dr["ROPRNO"].ToString();
@@ -885,6 +979,8 @@ ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
             List<Tuple<string, string>> lstparms = new List<Tuple<string, string>>();
             lstparms.Add(new Tuple<string, string>("method", "/m3api-rest/v2/execute/MNS150MI/GetUserData"));
             lstparms.Add(new Tuple<string, string>("USID", user));
+            lstparms.Add(new Tuple<string, string>("cono", this.company));
+            lstparms.Add(new Tuple<string, string>("divi", this.division));
 
             string sMethodList = BuildMethodParms(lstparms);
             string result = ProcessIONAPI(JobID, sMethodList, out Infobar);
@@ -930,6 +1026,8 @@ ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
             lstparms.Add(new Tuple<string, string>("PLPN", planOrderNumber));
             lstparms.Add(new Tuple<string, string>("SCHN", schduleNumber));
             lstparms.Add(new Tuple<string, string>("IGWA", "1"));
+            lstparms.Add(new Tuple<string, string>("cono", this.company));
+            lstparms.Add(new Tuple<string, string>("divi", this.division));
 
             string sMethodList = BuildMethodParms(lstparms);
             string result = ProcessIONAPI(JobID, sMethodList, out Infobar);
@@ -950,6 +1048,8 @@ ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
             List<Tuple<string, string>> lstparms = new List<Tuple<string, string>>();
             lstparms.Add(new Tuple<string, string>("method", "/m3api-rest/v2/execute/MMS200MI/Get"));
             lstparms.Add(new Tuple<string, string>("ITNO", productNo));
+            lstparms.Add(new Tuple<string, string>("cono", this.company));
+            lstparms.Add(new Tuple<string, string>("divi", this.division));
 
             string sMethodList = BuildMethodParms(lstparms);
             string result = ProcessIONAPI(JobID, sMethodList, out Infobar);
@@ -1061,7 +1161,7 @@ ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
             returnMessage = string.IsNullOrEmpty(returnMessage) ? "None" : returnMessage;
             string process = "Felt Hat";
 
-            ApplicationEventParameter[] ParmList = new ApplicationEventParameter[5];
+            ApplicationEventParameter[] ParmList = new ApplicationEventParameter[7];
             string result;
             ParmList[0] = new ApplicationEventParameter();
             ParmList[0].Name = "varProcess";
@@ -1078,6 +1178,12 @@ ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
             ParmList[4] = new ApplicationEventParameter();
             ParmList[4].Name = "varOrigSchNo";
             ParmList[4].Value = scheduleNo;
+            ParmList[5] = new ApplicationEventParameter();
+            ParmList[5].Name = "varStyleNo";
+            ParmList[5].Value = "";
+            ParmList[6] = new ApplicationEventParameter();
+            ParmList[6].Name = "varSchQty";
+            ParmList[6].Value = "0";
 
             FireApplicationEvent("FTD_MOPSplit", true, true, out result, ref ParmList);
         }
@@ -1128,53 +1234,149 @@ ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
             return value;
         }
 
-        public string CallServicePost(string json, string JobID)
+        protected string GetIONAPIInfo(string serverID, ref string infobar)
         {
-            string empty = string.Empty;
-            string token = GetBearerToken("0", "0", ref empty);
-            string IONAPIBaseUrl = "https://mingle-ionapi.inforcloudsuite.com";
-            var client = new HttpClient
+            string value;
+            try
             {
-                BaseAddress = new Uri(IONAPIBaseUrl)
-            };
+                InvokeRequestData invokeRequestDatum = new InvokeRequestData();
+                invokeRequestDatum.IDOName = "IONAPIMethods";
+                invokeRequestDatum.MethodName = "GetIONAPIInfo";
+                invokeRequestDatum.Parameters.Add(new InvokeParameter(serverID)); //ServerID
+                invokeRequestDatum.Parameters.Add(IDONull.Value); //Response Server URL             
+                invokeRequestDatum.Parameters.Add(IDONull.Value); //Response Tenant ID
+                invokeRequestDatum.Parameters.Add(IDONull.Value); //Reponse Infobar
+                InvokeResponseData invokeResponseDatum = this.Context.Commands.Invoke(invokeRequestDatum);
 
-            client.DefaultRequestHeaders.Accept.Add(
-            new MediaTypeWithQualityHeaderValue("application/json"));
+                infobar = invokeResponseDatum.Parameters[3].Value;
+                this.tenantID = invokeResponseDatum.Parameters[2].Value;
 
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
+                value = invokeResponseDatum.Parameters[1].Value;
 
 
-
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            var response = client.PostAsync("/HATCO_PRD/M3/m3api-rest/v2/execute", content).Result;
-
-            CreateLog(JobID, json, response.ToString(), response.StatusCode.ToString(), "", "FeltHat");
-
-            if (response.IsSuccessStatusCode)
-            {
-                string result = response.Content.ReadAsStringAsync().Result;
-                return result;
             }
-            else
+            catch (Exception exception)
             {
-                return string.Empty;
+                infobar = exception.ToString();
+                value = null;
             }
-
-
+            return value;
         }
+
+        public string CallServicePost(string json, string JobID, int runID)
+        {
+            string result = "";
+            try
+            {
+                string empty = string.Empty;
+
+                this.bearerToken = string.IsNullOrEmpty(this.bearerToken) ? GetBearerToken("0", "0", ref empty) : this.bearerToken;
+                this.serverURL = string.IsNullOrEmpty(this.serverURL) ? GetIONAPIInfo("0", ref empty) : this.serverURL;
+
+                var client = new HttpClient
+                {
+                    BaseAddress = new Uri(this.serverURL)
+                };
+
+                client.DefaultRequestHeaders.Accept.Add(
+                new MediaTypeWithQualityHeaderValue("application/json"));
+
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                string url = "/" + this.tenantID + "/M3/m3api-rest/v2/execute";
+
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", this.bearerToken);
+                var response = client.PostAsync(url, content).Result;
+
+                CreateLog(JobID, json, response.ToString(), response.StatusCode.ToString(), "", "FeltHat");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    result = response.Content.ReadAsStringAsync().Result;
+
+                }
+                else
+                {
+                    CreateLog(JobID, "CallServicePost", json, "RunID:" + runID.ToString() + "-Status:" + response.StatusCode.ToString(), "", "FeltHat");
+
+                    if (response.StatusCode == HttpStatusCode.Unauthorized)
+                    {
+                        this.bearerToken = GetBearerToken("0", "0", ref empty);
+
+                        result = string.Empty;
+                        if (runID < 5)
+                        {
+                            runID++;
+                            CallServicePost(json, JobID, runID);
+                        }
+
+
+                    }
+                    else
+                    {
+                        result = string.Empty;
+                        throw new Exception("Error occured when running the bulk API");
+                    }
+
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                CreateLog(JobID, "CallServicePost", json, ex.Message + "-" + ex.StackTrace, "", "FeltHat");
+                throw new Exception("Error occured when running the bulk API");
+
+            }
+
+            return result;
+        }
+
+
+        //public string CallServicePost(string json, string JobID)
+        //{
+        //    string empty = string.Empty;
+        //    this.bearerToken = string.IsNullOrEmpty(this.bearerToken) ? GetBearerToken("0", "0", ref empty) : this.bearerToken;
+        //    this.serverURL = string.IsNullOrEmpty(this.serverURL) ? GetIONAPIInfo("0", ref empty) : this.serverURL;
+
+        //    var client = new HttpClient
+        //    {
+        //        BaseAddress = new Uri(this.serverURL)
+        //    };
+
+        //    client.DefaultRequestHeaders.Accept.Add(
+        //    new MediaTypeWithQualityHeaderValue("application/json"));
+
+        //    var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        //    string url = "/" + this.tenantID + "/M3/m3api-rest/v2/execute";
+
+        //    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", this.bearerToken);
+        //    var response = client.PostAsync(url, content).Result;
+
+        //    CreateLog(JobID, json, response.ToString(), response.StatusCode.ToString(), "", "FeltHat");
+
+        //    if (response.IsSuccessStatusCode)
+        //    {
+        //        string result = response.Content.ReadAsStringAsync().Result;
+        //        return result;
+        //    }
+        //    else
+        //    {
+        //        return string.Empty;
+        //    }
+
+
+        //}
 
         public void RemoveOrigSchFromMOs(string company, string division, string JobID)
         {
-            UpdateMORoot oUpdateMORoot = new UpdateMORoot();
-            oUpdateMORoot.program = "PMS170MI";
-            oUpdateMORoot.cono = int.Parse(company);
-            oUpdateMORoot.divi = division;
-            oUpdateMORoot.excludeEmptyValues = false;
-            oUpdateMORoot.rightTrim = true;
-            oUpdateMORoot.maxReturnedRecords = 0;
-
             List<UpdateMOTransaction> oListUpdateMOTransaction = new List<UpdateMOTransaction>();
 
+            CreateLog(JobID, "fullResults.Rows.Count:" + fullResults.Rows.Count.ToString() , "","" , "", "RemoveOrigSch");
+
+
+            // Prepare the transaction list
             for (int i = 0; i < fullResults.Rows.Count; i++)
             {
                 string sMOList = fullResults.Rows[i]["ROPLPN"].ToString();
@@ -1205,26 +1407,48 @@ ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
 
             }
 
-            oUpdateMORoot.transactions = oListUpdateMOTransaction;
+            int totalBatches = (int)Math.Ceiling((double)oListUpdateMOTransaction.Count / this.batchSize);
 
-            string updjsonString = JsonConvert.SerializeObject(oUpdateMORoot);
+            for (int batchIndex = 0; batchIndex < totalBatches; batchIndex++)
+            {
+                // Get the current batch of transactions
+                var currentBatch = oListUpdateMOTransaction.Skip(batchIndex * batchSize).Take(batchSize).ToList();
 
-            string updPresults = CallServicePost(updjsonString, JobID);
+                UpdateMORoot oUpdateMORoot = new UpdateMORoot();
+                oUpdateMORoot.program = "PMS170MI";
+                oUpdateMORoot.cono = int.Parse(company);
+                oUpdateMORoot.divi = division;
+                oUpdateMORoot.excludeEmptyValues = false;
+                oUpdateMORoot.rightTrim = true;
+                oUpdateMORoot.maxReturnedRecords = 0;
+
+                oUpdateMORoot.transactions = currentBatch;
+
+                 CreateLog(JobID, "Batch:" + batchIndex.ToString() + "-" + currentBatch.Count.ToString(), "","" , "", "RemoveOrigSch");
+
+                // Serialize the current batch to JSON
+                string jsonString = JsonConvert.SerializeObject(oUpdateMORoot);
+
+                CreateLog(JobID, "Request:" + jsonString, "","" , "", "RemoveOrigSch");
+
+                // Call the service with the current batch
+                string results = CallServicePost(jsonString, JobID, 0);
+
+                CreateLog(JobID, "", "Response:" + results, "" , "", "RemoveOrigSch");
+            }
+
+
 
         }
 
 
         public void DelPlannedMOs(string company, string division, string JobID)
         {
-            DltRoot oDltRoot = new DltRoot();
-            oDltRoot.program = "PMS170MI";
-            oDltRoot.cono = int.Parse(company);
-            oDltRoot.divi = division;
-            oDltRoot.excludeEmptyValues = false;
-            oDltRoot.rightTrim = true;
-            oDltRoot.maxReturnedRecords = 0;
-
+            // Prepare the transaction list
             List<DltTransaction> oListDltTransaction = new List<DltTransaction>();
+
+            CreateLog(JobID, "fullResults.Rows.Count:" + fullResults.Rows.Count.ToString() , "","" , "", "DelPlannedMOs");
+
 
             for (int i = 0; i < fullResults.Rows.Count; i++)
             {
@@ -1246,11 +1470,38 @@ ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
 
             }
 
-            oDltRoot.transactions = oListDltTransaction;
+            int totalBatches = (int)Math.Ceiling((double)oListDltTransaction.Count / this.batchSize);
 
-            string dltjsonString = JsonConvert.SerializeObject(oDltRoot);
+            for (int batchIndex = 0; batchIndex < totalBatches; batchIndex++)
+            {
+                // Get the current batch of transactions
+                var currentBatch = oListDltTransaction.Skip(batchIndex * batchSize).Take(batchSize).ToList();
 
-            string dltPresults = CallServicePost(dltjsonString, JobID);
+                DltRoot oDltRoot = new DltRoot();
+                oDltRoot.program = "PMS170MI";
+                oDltRoot.cono = int.Parse(company);
+                oDltRoot.divi = division;
+                oDltRoot.excludeEmptyValues = false;
+                oDltRoot.rightTrim = true;
+                oDltRoot.maxReturnedRecords = 0;
+
+                oDltRoot.transactions = currentBatch;
+
+                 CreateLog(JobID, "Batch:" + batchIndex.ToString() + "-" + currentBatch.Count.ToString(), "","" , "", "DelPlannedMOs");
+
+                // Serialize the current batch to JSON
+                string jsonString = JsonConvert.SerializeObject(oDltRoot);
+
+                CreateLog(JobID, "Request:" + jsonString, "","" , "", "DelPlannedMOs");
+
+                // Call the service with the current batch
+                string results = CallServicePost(jsonString, JobID, 0);
+
+                CreateLog(JobID, "", "Response:" + results, "" , "", "DelPlannedMOs");
+            }
+
+
+
 
         }
 
@@ -1337,7 +1588,6 @@ ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
 
         private bool CheckActiveBGTask(int TaskID)
         {
-            //CreateLog(JobID, "CheckActiveBGTask", "", "", "", "FeltHat");
             LoadCollectionResponseData oResponse = this.Context.Commands.LoadCollection("ActiveBGTasks", "TaskStatusCode, TaskNumber", "TaskNumber = " + TaskID, "", 1);
             if (oResponse.Items.Count > 0)
             {
