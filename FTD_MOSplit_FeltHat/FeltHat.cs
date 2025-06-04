@@ -347,16 +347,14 @@ namespace FTD_MOSplit_FeltHat
                         CreateLog(JobID, "Filled model data", "", "", "", "FeltHat");
                         bool canGroup = true;
 
-                        canGroup = !oDataList
-                                    .Any(data => oDataList
-                                    .Where(nextData => nextData != data && data.ROPRNO == nextData.ROPRNO)
-                                    .Any(nextData => nextData.ROORQA % maxQty == 0));
+                        // canGroup = !oDataList
+                        //             .Any(data => oDataList
+                        //             .Where(nextData => nextData != data && data.ROPRNO == nextData.ROPRNO)
+                        //             .Any(nextData => nextData.ROORQA % maxQty == 0));
 
                         List<Model> testList1;
 
-                        if (canGroup)
-                        {
-                            testList1 = oDataList.OrderBy(a => a.ROPRNO).GroupBy(row => new { row.ROPRNO })
+                        testList1 = oDataList.OrderBy(a => a.ROPRNO).GroupBy(row => new { row.ROPRNO })
                 .Select(item => new Model()
                 {
                     ROPLPN = RemoveDuplicates(String.Join(",", item.Select(a => a.ROPLPN))),
@@ -382,11 +380,15 @@ namespace FTD_MOSplit_FeltHat
                     ROORTY = item.Select(a => a.ROORTY).FirstOrDefault(),
 
                 }).ToList();
-                        }
-                        else
-                        {
-                            testList1 = oDataList.OrderBy(a => a.ROPRNO).ToList();
-                        }
+
+                        // if (canGroup)
+                        // {
+                            
+                        // }
+                        // else
+                        // {
+                        //     testList1 = oDataList.OrderBy(a => a.ROPRNO).ToList();
+                        // }
 
 
 
@@ -442,7 +444,7 @@ namespace FTD_MOSplit_FeltHat
                         newMOPs.Columns.Add("SCHN");
                         newMOPs.Columns.Add("SIMD");
                         newMOPs.Columns.Add("PSTS");
-                        newMOPs.Columns.Add("CURR");//HariniS
+                        //newMOPs.Columns.Add("CURR");//HariniS
 
                         if (MOSplit)
                         {
@@ -513,7 +515,7 @@ namespace FTD_MOSplit_FeltHat
                                         string ScheduleNumber = oResponseResult.records[0].SCHN;
                                         //string ScheduleNumber = AddScheduleNo(StyleNumber);
                                         returnMessage = returnMessage + ", " + ScheduleNumber;
-                                        fill(JobID, maxQty, ScheduleNumber, Facility, company, canGroup);
+                                        fill(JobID, maxQty, ScheduleNumber, Facility, company);
                                         listIndex++;
                                     }
                                     //CreateLog(JobID, "TotalQty:" + TotalQty.ToString(), "i:" + i.ToString(), "", "", "FeltHat");
@@ -528,7 +530,7 @@ namespace FTD_MOSplit_FeltHat
                                         string ScheduleNumber = oResponseResult.records[0].SCHN;
                                         //string ScheduleNumber = AddScheduleNo(StyleNumber);
                                         returnMessage = returnMessage + ", " + ScheduleNumber;
-                                        fill(JobID, diff, ScheduleNumber, Facility, company, canGroup);
+                                        fill(JobID, diff, ScheduleNumber, Facility, company);
                                     }
 
                                     CreateLog(JobID, "FillCount", newMOPs.Rows.Count.ToString(), "", "", "FeltHat");
@@ -717,7 +719,7 @@ namespace FTD_MOSplit_FeltHat
             return oResultDataTable;
         }
 
-        public void fill(string JobID, int qty, string ScheduleNumber, string facility, string company, bool canGroup)
+        public void fill(string JobID, int qty, string ScheduleNumber, string facility, string company)
         {
             CreateLog(JobID, "New Schedules created", ScheduleNumber, "", "", "FeltHat");
 
@@ -749,15 +751,15 @@ namespace FTD_MOSplit_FeltHat
 
                         DataRow[] dr = null;
 
-                        if (canGroup)
-                        {
+                        // if (canGroup)
+                        // {
                             dr = newMOPs.Select(string.Format("PRNO ='{0}' AND SCHN = '{1}'", sPRNO, ScheduleNumber));
 
-                        }
-                        else
-                        {
-                            dr = newMOPs.Select(string.Format("PRNO ='{0}' AND SCHN = '{1}' AND CURR = '{2}'", sPRNO, ScheduleNumber, i.ToString()));
-                        }
+                        // }
+                        // else
+                        // {
+                        //     dr = newMOPs.Select(string.Format("PRNO ='{0}' AND SCHN = '{1}' AND CURR = '{2}'", sPRNO, ScheduleNumber, i.ToString()));
+                        // }
 
                         if (dr.Count() > 0)
                         {
@@ -791,7 +793,7 @@ namespace FTD_MOSplit_FeltHat
                             newRow["SCHN"] = ScheduleNumber;
                             newRow["SIMD"] = "0";
                             newRow["PSTS"] = sPSTS;
-                            newRow["CURR"] = i.ToString();
+                            //newRow["CURR"] = i.ToString();
 
                             newMOPs.Rows.Add(newRow);
 
