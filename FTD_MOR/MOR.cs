@@ -206,6 +206,7 @@ namespace FTD_MOR
             }
             catch (Exception ex)
             {
+                CreateLog("LoadOperations", ex.StackTrace, ex.Message, "", "Operation Reporting");
                 throw new Exception(ex.Message);
             }
         }
